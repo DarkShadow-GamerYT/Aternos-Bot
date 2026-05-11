@@ -11,9 +11,9 @@ const express = require('express');
 
 // ── Configuration (set via environment variables or defaults) ──
 const BOT_CONFIG = {
-  host: process.env.MC_HOST || 'your-server.aternos.me',   // Aternos server address
-  port: parseInt(process.env.MC_PORT || '25565', 10),
-  username: process.env.MC_USERNAME || 'AFK_Bot',           // offline-mode username
+  host: process.env.MC_HOST || 'RotiChor_SMP.aternos.me',   // Aternos server address
+  port: parseInt(process.env.MC_PORT || '51111', 10),
+  username: process.env.MC_USERNAME || 'hacker',           // offline-mode username
   version: process.env.MC_VERSION || false,                 // auto-detect, or e.g. '1.20.4'
   auth: process.env.MC_AUTH || 'offline',                   // 'offline' for cracked / Aternos default
 };
