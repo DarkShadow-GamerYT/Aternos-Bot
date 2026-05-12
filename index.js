@@ -157,6 +157,13 @@ function createBot() {
     }
   });
 
+  // ── Resource Pack handling ──
+  bot.on('resourcePack', (url, hash) => {
+    log(`Resource pack requested: ${url}`);
+    bot.acceptResourcePack();
+    log('Accepted resource pack');
+  });
+
   // ── Kicked ──
   bot.on('kicked', (reason, loggedIn) => {
     log(`Kicked! Reason: ${reason} (loggedIn: ${loggedIn})`);
@@ -200,13 +207,13 @@ const app = express();
 app.get('/', (_req, res) => {
   const status = bot && bot.entity
     ? {
-        status: 'online',
-        username: bot.username,
-        health: bot.health,
-        food: bot.food,
-        position: bot.entity.position,
-        uptime: process.uptime(),
-      }
+      status: 'online',
+      username: bot.username,
+      health: bot.health,
+      food: bot.food,
+      position: bot.entity.position,
+      uptime: process.uptime(),
+    }
     : { status: 'connecting', uptime: process.uptime() };
 
   res.json(status);
