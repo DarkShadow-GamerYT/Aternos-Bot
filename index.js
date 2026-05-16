@@ -35,7 +35,7 @@ function log(msg) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  Anti-AFK: dynamic behavior (walk, look, switch slots, sneak)
+//  Anti-AFK: continuous movement mode (walk, look, switch slots, sneak)
 // ─────────────────────────────────────────────────────────
 function startAntiAfk() {
   stopAntiAfk();
@@ -55,7 +55,9 @@ function startAntiAfk() {
       const pitch = (Math.random() * 0.8) - 0.4;
       bot.look(yaw, pitch, false);
 
-      // 3. Random control-state walk
+      // 3. Clear existing states, then pick a new random direction to continuously move
+      bot.clearControlStates();
+
       const directions = ['forward', 'back', 'left', 'right'];
       const dir = directions[Math.floor(Math.random() * directions.length)];
       bot.setControlState(dir, true);
@@ -70,32 +72,29 @@ function startAntiAfk() {
         bot.swingArm();
       }
 
-      // Stop movement after a short burst
-      setTimeout(() => {
-        if (!bot) return;
-        bot.clearControlStates();
-      }, 500 + Math.random() * 1000);
-
     } catch (err) {
       log(`Anti-AFK error (non-fatal): ${err.message}`);
     }
 
-    // Schedule next action with randomness to bypass pattern-based anti-afk checks
-    const baseInterval = ANTI_AFK_INTERVAL_MS || 15000;
-    // Vary the interval by +/- 5 seconds from the base interval
-    const nextInterval = Math.max(3000, baseInterval - 5000 + Math.floor(Math.random() * 10000));
+    // Schedule next change in direction relatively quickly so it keeps moving
+    const nextInterval = 1000 + Math.floor(Math.random() * 3000); // 1 to 4 seconds
     antiAfkTimer = setTimeout(doAction, nextInterval);
   };
 
   // Start the first cycle
   antiAfkTimer = setTimeout(doAction, 2000);
-  log('Anti-AFK movement started (dynamic mode)');
+  log('Anti-AFK movement started (continuous movement mode)');
 }
 
 function stopAntiAfk() {
   if (antiAfkTimer) {
     clearTimeout(antiAfkTimer);
     antiAfkTimer = null;
+  }
+  if (bot) {
+    try {
+      bot.clearControlStates();
+    } catch (err) {}
   }
 }
 
