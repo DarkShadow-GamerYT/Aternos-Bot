@@ -35,33 +35,38 @@ function log(msg) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  Anti-AFK: random walk + look
+//  Anti-AFK: dynamic behavior (walk, look, switch slots, sneak)
 // ─────────────────────────────────────────────────────────
 function startAntiAfk() {
   stopAntiAfk();
 
-  antiAfkTimer = setInterval(() => {
-    if (!bot || !bot.entity) return;
+  const doAction = () => {
+    if (!bot || !bot.entity) {
+      antiAfkTimer = setTimeout(doAction, 5000);
+      return;
+    }
 
     try {
-      // Random control-state walk for 1-3 seconds
-      const directions = ['forward', 'back', 'left', 'right'];
-      const dir = directions[Math.floor(Math.random() * directions.length)];
+      // 1. Change hotbar slot (simulates inventory interaction)
+      bot.setQuickBarSlot(Math.floor(Math.random() * 9));
 
-      bot.setControlState(dir, true);
-
-      // Also jump occasionally
-      if (Math.random() > 0.5) {
-        bot.setControlState('jump', true);
-      }
-
-      // Random head look
+      // 2. Random head look
       const yaw = (Math.random() * Math.PI * 2) - Math.PI;
       const pitch = (Math.random() * 0.8) - 0.4;
       bot.look(yaw, pitch, false);
 
-      // Swing arm for extra "presence"
-      if (Math.random() > 0.7) {
+      // 3. Random control-state walk
+      const directions = ['forward', 'back', 'left', 'right'];
+      const dir = directions[Math.floor(Math.random() * directions.length)];
+      bot.setControlState(dir, true);
+
+      // 4. Random sub-action (jump, sneak, or swing)
+      const actionRand = Math.random();
+      if (actionRand < 0.33) {
+        bot.setControlState('jump', true);
+      } else if (actionRand < 0.66) {
+        bot.setControlState('sneak', true);
+      } else {
         bot.swingArm();
       }
 
@@ -69,19 +74,27 @@ function startAntiAfk() {
       setTimeout(() => {
         if (!bot) return;
         bot.clearControlStates();
-      }, 800 + Math.random() * 1500);
+      }, 500 + Math.random() * 1000);
 
     } catch (err) {
       log(`Anti-AFK error (non-fatal): ${err.message}`);
     }
-  }, ANTI_AFK_INTERVAL_MS);
 
-  log('Anti-AFK movement started');
+    // Schedule next action with randomness to bypass pattern-based anti-afk checks
+    const baseInterval = ANTI_AFK_INTERVAL_MS || 15000;
+    // Vary the interval by +/- 5 seconds from the base interval
+    const nextInterval = Math.max(3000, baseInterval - 5000 + Math.floor(Math.random() * 10000));
+    antiAfkTimer = setTimeout(doAction, nextInterval);
+  };
+
+  // Start the first cycle
+  antiAfkTimer = setTimeout(doAction, 2000);
+  log('Anti-AFK movement started (dynamic mode)');
 }
 
 function stopAntiAfk() {
   if (antiAfkTimer) {
-    clearInterval(antiAfkTimer);
+    clearTimeout(antiAfkTimer);
     antiAfkTimer = null;
   }
 }
